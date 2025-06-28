@@ -23,6 +23,24 @@ CodeMirror.registerHelper("lint", "python", function (text) {
 
 async function main() {
   pyodide = await loadPyodide();
+  const key = "installedPackages";
+  const savedPackages = JSON.parse(localStorage.getItem(key)) || [];
+
+  if (savedPackages.length > 0) {
+    await pyodide.loadPackage("micropip");
+    for (const mod of savedPackages) {
+      try {
+        await pyodide.runPythonAsync(`
+import micropip
+await micropip.install("${mod}")
+`);
+        console.log(`Auto-reinstalled: ${mod}`);
+      } catch (err) {
+        console.warn(`Failed to auto-reinstall ${mod}:`, err);
+      }
+    }
+  }
+
 
   CodeMirror.registerHelper("lint", "python", function (text) {
     const found = [];
@@ -112,7 +130,9 @@ await micropip.install("${mod}")
       }
     }
   }
-
+  if (codeLines.length === 0) {
+    codeLines.push("pass");
+  }
   const finalCode = codeLines.join("\n");
 
   // Handle inputs
