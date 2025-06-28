@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Code Runner</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- ✅ CodeMirror styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.css" />
+
+  <!-- ✅ Your custom styles -->
+</head>
+<body>
+
+  <b><p style="font-size: 2em; text-align: center;">Python Compiler</p></b>
+
+  <!-- Editor placeholder + loading -->
+  <div id="loader" style="text-align: center; padding: 2rem;">
+    ⏳ Loading Python editor...
+  </div>
+  <textarea id="pythonEditor" style="display: none;"></textarea>
+
+    <!-- Run & Clear buttons -->
+  <button id="run">▶ Run</button>
+  <button id="clear">🧹 Clear Output</button>
+  <button id="packages">📦 Show Packages</button>
+  <div id="output" class="output-box"></div>
+
+  <!-- ✅ CodeMirror scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.js"></script>
+
+  <!-- ✅ Pyodide (Python runtime in browser) -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+
+  <!-- ✅ Your main logic -->
+  <script src="script.js"></script>
+</body>
+</html>
