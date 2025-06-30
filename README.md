@@ -11,4 +11,5 @@
   <li>The "Delete All" Is Impossible (In Short Preview & VS Code)</li>
   <li>Any Inputs Are Impossible (In Short Preview & VS Code), So The Value Will Always "None"</li>
   <li>There Is A Bug That Create 2 Inputs, One Is Not Styled, One Is Styled, Write Code In The Styled</li>
+  <li>The Reason The Compiler Takes A Lots Of Time To Load Because It Needs To Load 10MB</li>
 </ul>
