@@ -1,6 +1,8 @@
 const body = document.body;
-
 let pyodide, pythonEditor;
+
+const EDITOR_KEY = "pythonCode";
+const PACKAGE_KEY = "installedPackages";
 
 // Linting support
 CodeMirror.registerHelper("lint", "python", function (text) {
@@ -15,7 +17,7 @@ CodeMirror.registerHelper("lint", "python", function (text) {
       from: CodeMirror.Pos(line, 0),
       to: CodeMirror.Pos(line, 100),
       message: msg,
-      severity: "error",
+      severity: "error"
     });
   }
   return found;
@@ -23,9 +25,8 @@ CodeMirror.registerHelper("lint", "python", function (text) {
 
 async function main() {
   pyodide = await loadPyodide();
-  const key = "installedPackages";
-  const savedPackages = JSON.parse(localStorage.getItem(key)) || [];
 
+  const savedPackages = JSON.parse(localStorage.getItem(PACKAGE_KEY)) || [];
   if (savedPackages.length > 0) {
     await pyodide.loadPackage("micropip");
     for (const mod of savedPackages) {
@@ -33,32 +34,13 @@ async function main() {
         await pyodide.runPythonAsync(`
 import micropip
 await micropip.install("${mod}")
-`);
+        `);
         console.log(`Auto-reinstalled: ${mod}`);
       } catch (err) {
         console.warn(`Failed to auto-reinstall ${mod}:`, err);
       }
     }
   }
-
-
-  CodeMirror.registerHelper("lint", "python", function (text) {
-    const found = [];
-    try {
-      pyodide.runPython(`compile(${JSON.stringify(text)}, "<input>", "exec")`);
-    } catch (e) {
-      const msg = e.toString();
-      const lineMatch = msg.match(/line (\d+)/i);
-      const line = lineMatch ? parseInt(lineMatch[1], 10) - 1 : 0;
-      found.push({
-        from: CodeMirror.Pos(line, 0),
-        to: CodeMirror.Pos(line, 100),
-        message: msg,
-        severity: "error"
-      });
-    }
-    return found;
-  });
 
   pythonEditor = CodeMirror.fromTextArea(document.getElementById("pythonEditor"), {
     mode: "python",
@@ -72,12 +54,21 @@ await micropip.install("${mod}")
     gutters: ["CodeMirror-lint-markers"]
   });
 
+  // Load saved code
+  const savedCode = localStorage.getItem(EDITOR_KEY);
+  if (savedCode) {
+    pythonEditor.setValue(savedCode);
+  }
+
+  // Auto-save on change
+  pythonEditor.on("change", () => {
+    localStorage.setItem(EDITOR_KEY, pythonEditor.getValue());
+  });
 
   // Reveal the editor after everything is ready
   document.getElementById("loader").style.display = "none";
   document.getElementById("pythonEditor").style.display = "block";
 }
-
 
 main();
 
@@ -88,13 +79,10 @@ document.getElementById("run").addEventListener("click", async () => {
 
   const rawCode = pythonEditor.getValue();
   const lines = rawCode.split("\n");
-
-  const key = "installedPackages";
-  const installed = JSON.parse(localStorage.getItem(key)) || [];
+  const installed = JSON.parse(localStorage.getItem(PACKAGE_KEY)) || [];
   const codeLines = [];
 
   const micropipInstallRegex = /micropip\.install\s*\(\s*["']([^"']+)["']\s*\)/;
-
   const toInstall = [];
 
   for (let line of lines) {
@@ -122,7 +110,7 @@ import micropip
 await micropip.install("${mod}")
         `);
         installed.push(mod);
-        localStorage.setItem(key, JSON.stringify(installed));
+        localStorage.setItem(PACKAGE_KEY, JSON.stringify(installed));
         outputDiv.innerHTML += `✅ Installed <b>${mod}</b>. See the <a href="installed-packages.html" target="_blank">Installed Packages</a><br><br>`;
       } catch (err) {
         outputDiv.innerHTML += `❌ Failed to install <b>${mod}</b>: ${err}<br><br>`;
@@ -130,12 +118,12 @@ await micropip.install("${mod}")
       }
     }
   }
+
   if (codeLines.length === 0) {
     codeLines.push("pass");
   }
   const finalCode = codeLines.join("\n");
 
-  // Handle inputs
   const inputRegex = /input\s*\((?:\"([^\"]*)\"|'([^']*)')?\)/g;
   let inputs = [];
   let match;
@@ -168,7 +156,16 @@ result = sys.stdout.getvalue()
   }
 });
 
-// Link to installed packages
+// Show installed packages
 document.getElementById("packages").addEventListener("click", () => {
   window.location.href = "installed-packages.html";
+});
+
+// Clear editor button
+document.getElementById("clear-editor").addEventListener("click", () => {
+  const confirmed = confirm("Clear all code from the editor?");
+  if (confirmed) {
+    pythonEditor.setValue("");
+    localStorage.removeItem(EDITOR_KEY);
+  }
 });
